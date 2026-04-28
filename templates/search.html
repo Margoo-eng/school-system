@@ -1,1 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search</title>
+</head>
+<body>
 
+<h2>Search Student by ID</h2>
+
+<form method="POST">
+    Enter ID: <input type="text" name="id">
+    <button type="submit">Search</button>
+</form>
+
+{% if result %}
+<hr>
+<p><b>ID:</b> {{ result[0] }}</p>
+<p><b>Name:</b> {{ result[1] }}</p>
+<p><b>Department:</b> {{ result[3] }}</p>
+{% endif %}
+
+<br>
+<a href="/profile">Back</a>
+
+</body>
+</html>
