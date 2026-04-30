@@ -1,20 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Profile</title>
+    <title>Dashboard</title>
 </head>
 <body>
-
-<h2>My Profile</h2>
-
-<p><b>ID:</b> {{ user[0] }}</p>
-<p><b>Name:</b> {{ user[1] }}</p>
-<p><b>Department:</b> {{ user[3] }}</p>
-
-<br>
-
-<a href="/search">Search Students</a><br>
-<a href="/logout">Logout</a>
-
+    <h2>Welcome, {{ user }}</h2>
+    <a href="/logout">Logout</a>
 </body>
 </html>
