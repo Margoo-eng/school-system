@@ -2,67 +2,82 @@ from flask import Flask, render_template, request, redirect, session
 import sqlite3
 
 app = Flask(__name__)
-app.secret_key = "12345"
+app.secret_key = "secret123"
 
+# Connect DB
 def get_db():
-    return sqlite3.connect("students.db")
+    return sqlite3.connect("users.db")
 
-@app.route('/', methods=['GET','POST'])
+# Create table if not exists
+def init_db():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS users(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            password TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+init_db()
+
+# ---------------- ROUTES ---------------- #
+
+@app.route("/", methods=["GET", "POST"])
 def login():
-    msg = ""
-    if request.method == 'POST':
-        sid = request.form['id']
-        pwd = request.form['password']
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
 
         conn = get_db()
-        c = conn.cursor()
-        c.execute("SELECT * FROM students WHERE id=? AND password=?", (sid, pwd))
-        user = c.fetchone()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
+        user = cur.fetchone()
         conn.close()
 
         if user:
-            session['user'] = user[0]
-            return redirect('/profile')
+            session["user"] = username
+            return redirect("/dashboard")
         else:
-            msg = "Invalid login"
+            return "Invalid credentials"
 
-    return render_template("login.html", msg=msg)
-
-
-@app.route('/profile')
-def profile():
-    if 'user' not in session:
-        return redirect('/')
-
-    conn = get_db()
-    c = conn.cursor()
-    c.execute("SELECT * FROM students WHERE id=?", (session['user'],))
-    user = c.fetchone()
-    conn.close()
-
-    return render_template("profile.html", user=user)
+    return render_template("login.html")
 
 
-@app.route('/search', methods=['GET','POST'])
-def search():
-    result = None
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
 
-    if request.method == 'POST':
-        sid = request.form['id']
+        try:
+            conn = get_db()
+            cur = conn.cursor()
+            cur.execute("INSERT INTO users(username, password) VALUES(?, ?)", (username, password))
+            conn.commit()
+            conn.close()
+            return redirect("/")
+        except:
+            return "User already exists"
 
-        conn = get_db()
-        c = conn.cursor()
-        c.execute("SELECT * FROM students WHERE id=?", (sid,))
-        result = c.fetchone()
-        conn.close()
-
-    return render_template("search.html", result=result)
+    return render_template("register.html")
 
 
-@app.route('/logout')
+@app.route("/dashboard")
+def dashboard():
+    if "user" in session:
+        return render_template("dashboard.html", user=session["user"])
+    return redirect("/")
+
+
+@app.route("/logout")
 def logout():
-    session.clear()
-    return redirect('/')
+    session.pop("user", None)
+    return redirect("/")
+
 
 if __name__ == "__main__":
     app.run(debug=True)
