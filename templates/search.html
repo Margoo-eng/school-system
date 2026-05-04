@@ -1,26 +1,31 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Search</title>
+    <title>Search Student</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
-<h2>Search Student by ID</h2>
+<div class="container">
+    <h2>Search Student</h2>
 
-<form method="POST">
-    Enter ID: <input type="text" name="id">
-    <button type="submit">Search</button>
-</form>
+    <form method="POST">
+        <input type="number" name="student_id" placeholder="Enter ID" required>
+        <button type="submit">Search</button>
+    </form>
 
-{% if result %}
-<hr>
-<p><b>ID:</b> {{ result[0] }}</p>
-<p><b>Name:</b> {{ result[1] }}</p>
-<p><b>Department:</b> {{ result[3] }}</p>
-{% endif %}
+    {% if student %}
+        <h3>Result:</h3>
+        <p>ID: {{ student[0] }}</p>
+        <p>Name: {{ student[1] }}</p>
+        <p>Department: {{ student[2] }}</p>
+    {% elif student is not none %}
+        <p>No student found</p>
+    {% endif %}
 
-<br>
-<a href="/profile">Back</a>
+    <br>
+    <a href="/dashboard">Back</a>
+</div>
 
 </body>
 </html>
