@@ -4,28 +4,42 @@ import sqlite3
 app = Flask(__name__)
 app.secret_key = "secret123"
 
-# Connect DB
 def get_db():
     return sqlite3.connect("users.db")
 
-# Create table if not exists
 def init_db():
     conn = get_db()
     cur = conn.cursor()
+
+    # Users table
     cur.execute("""
-        CREATE TABLE IF NOT EXISTS users(
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE,
-            password TEXT
-        )
+    CREATE TABLE IF NOT EXISTS users(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        password TEXT
+    )
     """)
+
+    # Students table
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS students(
+        id INTEGER PRIMARY KEY,
+        full_name TEXT,
+        department TEXT
+    )
+    """)
+
+    # Sample data
+    cur.execute("INSERT OR IGNORE INTO students VALUES (1, 'Marga Duguma', 'Electrical Engineering')")
+    cur.execute("INSERT OR IGNORE INTO students VALUES (2, 'Abel Tesfaye', 'Computer Science')")
+    cur.execute("INSERT OR IGNORE INTO students VALUES (3, 'Sara Ahmed', 'Information Technology')")
+
     conn.commit()
     conn.close()
 
 init_db()
 
-# ---------------- ROUTES ---------------- #
-
+# ---------------- LOGIN ----------------
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -46,7 +60,7 @@ def login():
 
     return render_template("login.html")
 
-
+# ---------------- REGISTER ----------------
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -65,19 +79,38 @@ def register():
 
     return render_template("register.html")
 
-
+# ---------------- DASHBOARD ----------------
 @app.route("/dashboard")
 def dashboard():
     if "user" in session:
         return render_template("dashboard.html", user=session["user"])
     return redirect("/")
 
+# ---------------- SEARCH ----------------
+@app.route("/search", methods=["GET", "POST"])
+def search():
+    if "user" not in session:
+        return redirect("/")
 
+    student = None
+
+    if request.method == "POST":
+        student_id = request.form["student_id"]
+
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM students WHERE id=?", (student_id,))
+        student = cur.fetchone()
+        conn.close()
+
+    return render_template("search.html", student=student)
+
+# ---------------- LOGOUT ----------------
 @app.route("/logout")
 def logout():
     session.pop("user", None)
     return redirect("/")
 
-
+# ---------------- RUN ----------------
 if __name__ == "__main__":
     app.run(debug=True)
